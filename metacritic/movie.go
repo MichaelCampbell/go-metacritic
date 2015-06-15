@@ -2,7 +2,6 @@ package metacritic
 
 import (
         "encoding/json"
-        "log"
         "strings"
 
         "github.com/PuerkitoBio/goquery"
@@ -21,9 +20,16 @@ func search_movie(url string) (string, error) {
     return "", err
   }
 
-  doc.Find(".body .search_results li").Each(func(i int, s *goquery.Selection) {
+  doc.Find(".body .search_results li.result").Each(func(i int, s *goquery.Selection) {
+    url, exists := s.Find("h3.product_title a").Attr("href")
+    if !exists {
+      url = "Not Available"
+    } else {
+      url = BASE_URL + url
+    }
     m := MovieResult{
       Name: strings.TrimSpace(s.Find("a").First().Text()),
+      Url: url,
       Certificate: strings.TrimSpace(s.Find("li.rating .data").Text()),
       Runtime: strings.TrimSpace(s.Find("li.runtime .data").Text()),
       ReleaseDate: strings.TrimSpace(s.Find("li.release_date .data").Text()),
@@ -31,6 +37,7 @@ func search_movie(url string) (string, error) {
       UserRating: strings.TrimSpace(s.Find("li.product_avguserscore .data").Text()),
       MetacriticRating: strings.TrimSpace(s.Find("span.metascore_w").Text()),
     }
+
     movie_results = append(movie_results, m)
   })
 
