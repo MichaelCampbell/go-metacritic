@@ -3,12 +3,13 @@ package metacritic
 import (
         "encoding/json"
         "log"
+        "strings"
 
         "github.com/PuerkitoBio/goquery"
         )
 
 type MovieResult struct {
-  name, url, certificate, runtime, releaseDate, genres, userRating, metacriticRating string
+  Name, Url, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
 }
 
 func search_movie(url string) (string, error) {
@@ -21,23 +22,23 @@ func search_movie(url string) (string, error) {
   }
 
   doc.Find(".body .search_results li").Each(func(i int, s *goquery.Selection) {
-    movie_results[i] = MovieResult{
-      name: s.Find("a").First().Text(),
-      // url: BASE_URL + s.Find("a").Attr("href"),
-      certificate: s.Find("li.rating .data").Text(),
-      runtime: s.Find("li.runtime .data").Text(),
-      releaseDate: s.Find("li.release_date .data").Text(),
-      genres: s.Find("li.genre .data").Text(),
-      userRating: s.Find("li.product_avguserscore .data").Text(),
-      metacriticRating: s.Find("span.metascore_w").Text(),
+    m := MovieResult{
+      Name: strings.TrimSpace(s.Find("a").First().Text()),
+      Certificate: strings.TrimSpace(s.Find("li.rating .data").Text()),
+      Runtime: strings.TrimSpace(s.Find("li.runtime .data").Text()),
+      ReleaseDate: strings.TrimSpace(s.Find("li.release_date .data").Text()),
+      Genres: strings.TrimSpace(s.Find("li.genre .data").Text()),
+      UserRating: strings.TrimSpace(s.Find("li.product_avguserscore .data").Text()),
+      MetacriticRating: strings.TrimSpace(s.Find("span.metascore_w").Text()),
     }
+    movie_results = append(movie_results, m)
   })
 
   res, err := json.Marshal(movie_results)
+
   if err != nil {
-    log.Fatal(err)
+    return "", nil
   }
 
   return string(res), nil
-
 }
