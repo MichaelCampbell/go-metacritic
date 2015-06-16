@@ -11,20 +11,22 @@ type Movie struct {
 }
 
 func main() {
-  result, err := metacritic.Search("Movie", "fight")
+  result, err := metacritic.Find("Movie", "fight-club")
   if err != nil {
     fmt.Println(err)
   }
 
-  var mov []Movie
+  var mov Movie
   err = json.Unmarshal([]byte(result), &mov)
 
   if err != nil {
     fmt.Println(err)
   }
 
-  fmt.Printf("|Name\t Url \t UserRating \tMetacriticRating\n")
-  for _, el := range mov {
-    fmt.Printf("|%-50s \t | %-100s \t |%s \t|%s \t| \n", el.Name, el.Url, el.UserRating, el.MetacriticRating)
-  }
+  fmt.Println(mov)
+
+  // fmt.Printf("|Name\t Url \t UserRating \tMetacriticRating\n")
+  // for _, el := range mov {
+  //   fmt.Printf("|%-50s \t | %-100s \t |%s \t|%s \t| \n", el.Name, el.Url, el.UserRating, el.MetacriticRating)
+  // }
 }
