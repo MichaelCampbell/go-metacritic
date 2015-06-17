@@ -7,7 +7,12 @@ import (
         )
 
 type Movie struct {
-  Name, Url, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
+  Name, Url, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string,
+  CriticReviews []CriticReview
+}
+
+type CriticReview struct {
+  Score, Source, Author, Summary, Url string
 }
 
 func main() {
