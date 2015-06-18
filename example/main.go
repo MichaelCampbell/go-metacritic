@@ -28,7 +28,7 @@ func main() {
     fmt.Println(err)
   }
 
-  fmt.Println(mov.Poster)
+  fmt.Println(mov.Genres)
   // for _, cr := range(mov.CriticReviews) {
   //   fmt.Println(cr.Score)
   // }

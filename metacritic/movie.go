@@ -3,6 +3,7 @@ package metacritic
 import (
         "encoding/json"
         "strings"
+        "strconv"
 
         "github.com/PuerkitoBio/goquery"
         )
@@ -15,9 +16,14 @@ type CriticReview struct {
   Score, Source, Author, Summary, Url string
 }
 
+type UserReview struct {
+  Username, ProfileUrl, Score, ReviewDate, Review, Like, Dislike string
+}
+
 type Movie struct{
   Basic
   CriticReviews []CriticReview
+  UserReviews []UserReview
 }
 
 func search_movie(url string) (string, error) {
@@ -44,12 +50,10 @@ func search_movie(url string) (string, error) {
       UserRating: strings.TrimSpace(s.Find("li.product_avguserscore .data").Text()),
       MetacriticRating: strings.TrimSpace(s.Find("span.metascore_w").Text()),
     }
-
     movie_results = append(movie_results, m)
   })
 
   res, err := json.Marshal(movie_results)
-
   if err != nil {
     return "", nil
   }
@@ -59,7 +63,6 @@ func search_movie(url string) (string, error) {
 
 func find_movie(url string) (string, error) {
   var mov Movie
-
   doc, err := goquery.NewDocument(url)
   if err != nil {
     return "", err
@@ -77,7 +80,12 @@ func find_movie(url string) (string, error) {
     poster = "Not Available"
   }
 
-  crs := critic_reviews(url)
+  var genres string
+  doc.Find(".summary_wrap .side_details .summary_details li.product_genre .data").Each(func(i int, s *goquery.Selection) {
+    genres = genres + strings.TrimSpace(s.Text()) + ", "
+    })
+  genres = genres[0:len(genres)-2]
+
   var cert, runtime string
   doc.Find(".summary_wrap .side_details .summary_details li.product_rating").Each(func(i int, s *goquery.Selection) {
     if s.Find("span.label").Text() == "Rating:" {
@@ -87,10 +95,8 @@ func find_movie(url string) (string, error) {
     }
   })
 
-  var genres string
-  doc.Find(".summary_wrap .side_details .summary_details li.product_genre .data").Each(func(i int, s *goquery.Selection) {
-    genres = genres + ", " + strings.TrimSpace(s.Text())
-    })
+  crs := critic_reviews(url)
+  urs := user_reviews(url)
   mov = Movie{
           Basic: Basic{
             Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
@@ -105,12 +111,13 @@ func find_movie(url string) (string, error) {
             MetacriticRating: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
           },
           CriticReviews: crs,
+          UserReviews: urs,
         }
-
   res, err := json.Marshal(mov)
   if err != nil {
     return "", nil
   }
+
   return string(res), nil
 }
 
@@ -123,21 +130,49 @@ func critic_reviews(url string) []CriticReview{
   }
 
   doc.Find(".product_reviews ol.critic_reviews li.critic_review").Each(func(i int, s *goquery.Selection) {
-    url, exists := s.Find(".review_content ul.review_actions li.full_review a").Attr("href")
-    if !exists {
-      url = "Not Available"
-    } else {
-      url = BASE_URL + url
-    }
     cr := CriticReview{
       Score: strings.TrimSpace(s.Find(".review_content .review_grade .metascore_w").Text()),
       Source: strings.TrimSpace(s.Find(".review_critic .source a").Text()),
       Author: strings.TrimSpace(s.Find(".review_critic .author a").Text()),
       Summary: strings.TrimSpace(s.Find(".review_body").Text()),
-      Url: url,
+      Url: s.Find(".review_content ul.review_actions li.full_review a").AttrOr("href", "Not Available"),
     }
-
     critic_reviews = append(critic_reviews, cr)
   })
+
   return critic_reviews
+}
+
+func user_reviews(url string) []UserReview{
+  var user_reviews []UserReview
+  url = url + "/user-reviews"
+  doc, err := goquery.NewDocument(url)
+  if err != nil {
+    return user_reviews
+  }
+
+  doc.Find("div.pages li.page").Each(func(i int, p *goquery.Selection) {
+    nxturl := url + "?page=" + strconv.Itoa(i)
+    page, err := goquery.NewDocument(nxturl)
+    if err != nil {
+      return
+    }
+
+    page.Find("ol.user_reviews li.user_review").Each(func(j int, s *goquery.Selection) {
+      votes, _ := strconv.Atoi(s.Find(".review_content ul.review_actions .thumb_count span.total_ups").Text())
+      t_votes, _ := strconv.Atoi(s.Find(".review_content ul.review_actions .thumb_count span.total_votes").Text())
+      ur := UserReview{
+        Username: strings.TrimSpace(s.Find(".review_content .review_critic .name a").Text()),
+        ProfileUrl: strings.TrimSpace(s.Find(".review_content .review_critic .name a").AttrOr("href", "Not Available")),
+        Score: strings.TrimSpace(s.Find(".review_content .review_grade div.user").Text()),
+        ReviewDate: strings.TrimSpace(s.Find(".review_content .review_critic .date").Text()),
+        Review: strings.TrimSpace(s.Find(".review_content .review_body span.blurb_expanded").Text()),
+        Like: strconv.Itoa(votes),
+        Dislike: strconv.Itoa(t_votes - votes),
+      }
+      user_reviews = append(user_reviews, ur)
+    })
+  })
+
+  return user_reviews
 }

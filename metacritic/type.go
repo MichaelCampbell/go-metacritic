@@ -6,7 +6,7 @@ import (
         )
 
 const BASE_URL = "http://www.metacritic.com"
-var valid_types = []string{"movie", "games", "albums", "tv", "person", "trailers", "companies"}
+var valid_types = []string{"movie"}
 
 func Search(kind, query string) (string, error) {
   valid := is_valid_type(&kind, valid_types)
@@ -16,7 +16,6 @@ func Search(kind, query string) (string, error) {
 
   url := BASE_URL + "/search/" + kind + "/" + query + "/results"
   result, err := search_movie(url)
-
   if err != nil {
     return "", err
   }
