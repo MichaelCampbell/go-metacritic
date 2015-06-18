@@ -8,7 +8,7 @@ import (
         )
 
 type Basic struct {
-  Name, Url, Summary, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
+  Name, Url, Poster, Summary, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
 }
 
 type CriticReview struct {
@@ -72,17 +72,35 @@ func find_movie(url string) (string, error) {
     url = BASE_URL + url
   }
 
-  crs := critic_reviews(url)
+  poster, exists := doc.Find(".product_data_summary .product_image img.product_image").First().Attr("src")
+  if !exists {
+    poster = "Not Available"
+  }
 
+  crs := critic_reviews(url)
+  var cert, runtime string
+  doc.Find(".summary_wrap .side_details .summary_details li.product_rating").Each(func(i int, s *goquery.Selection) {
+    if s.Find("span.label").Text() == "Rating:" {
+      cert = s.Find("span.data").Text()
+    } else {
+      runtime = s.Find("span.data").Text()
+    }
+  })
+
+  var genres string
+  doc.Find(".summary_wrap .side_details .summary_details li.product_genre .data").Each(func(i int, s *goquery.Selection) {
+    genres = genres + ", " + strings.TrimSpace(s.Text())
+    })
   mov = Movie{
           Basic: Basic{
             Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
             Url: url,
+            Poster: poster,
             Summary: strings.TrimSpace(doc.Find(".product_details ul.summary_details li.product_summary span.data").Text()),
-            Certificate: strings.TrimSpace(doc.Find(".summary_wrap .side_details .summary_details li.product_rating span.data").Text()),
-            // Runtime: strings.TrimSpace(doc.Find("li.runtime .data").Text()),
+            Certificate: strings.TrimSpace(cert),
+            Runtime: strings.TrimSpace(runtime),
             ReleaseDate: strings.TrimSpace(doc.Find(".product_data ul.summary_details li.release_data span.data").Text()),
-            // Genres: strings.TrimSpace(doc.Find("li.genre .data").Text()),
+            Genres: genres,
             UserRating: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
             MetacriticRating: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
           },
