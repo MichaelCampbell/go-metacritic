@@ -7,7 +7,7 @@ import (
         )
 
 type Movie struct {
-  Name, Url, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string,
+  Name, Url, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
   CriticReviews []CriticReview
 }
 
@@ -28,7 +28,9 @@ func main() {
     fmt.Println(err)
   }
 
-  fmt.Println(mov)
+  for _, cr := range(mov.CriticReviews) {
+    fmt.Println(cr.Score)
+  }
 
   // fmt.Printf("|Name\t Url \t UserRating \tMetacriticRating\n")
   // for _, el := range mov {

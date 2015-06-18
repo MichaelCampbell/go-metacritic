@@ -72,8 +72,10 @@ func find_movie(url string) (string, error) {
     url = BASE_URL + url
   }
 
+  crs := critic_reviews(url)
+
   mov = Movie{
-          Basic{
+          Basic: Basic{
             Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
             Url: url,
             Summary: strings.TrimSpace(doc.Find(".product_details ul.summary_details li.product_summary span.data").Text()),
@@ -84,10 +86,9 @@ func find_movie(url string) (string, error) {
             UserRating: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
             MetacriticRating: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
           },
-          CriticReviews: []CriticReview{},
+          CriticReviews: crs,
         }
 
-  critic_reviews(&mov, url)
   res, err := json.Marshal(mov)
   if err != nil {
     return "", nil
@@ -95,12 +96,12 @@ func find_movie(url string) (string, error) {
   return string(res), nil
 }
 
-func critic_reviews(mov *Movie, url string) {
+func critic_reviews(url string) []CriticReview{
   var critic_reviews []CriticReview
   url = url + "/critic-reviews"
   doc, err := goquery.NewDocument(url)
   if err != nil {
-    return
+    return critic_reviews
   }
 
   doc.Find(".product_reviews ol.critic_reviews li.critic_review").Each(func(i int, s *goquery.Selection) {
@@ -111,14 +112,14 @@ func critic_reviews(mov *Movie, url string) {
       url = BASE_URL + url
     }
     cr := CriticReview{
-      Score: strings.TrimSpace(doc.Find(".review_content .review_grade .metascore_w").Text()),
-      Source: strings.TrimSpace(doc.Find(".review_critic .source a").Text()),
-      Author: strings.TrimSpace(doc.Find(".review_critic .author a").Text()),
-      Summary: strings.TrimSpace(doc.Find(".review_body").Text()),
+      Score: strings.TrimSpace(s.Find(".review_content .review_grade .metascore_w").Text()),
+      Source: strings.TrimSpace(s.Find(".review_critic .source a").Text()),
+      Author: strings.TrimSpace(s.Find(".review_critic .author a").Text()),
+      Summary: strings.TrimSpace(s.Find(".review_body").Text()),
       Url: url,
     }
 
     critic_reviews = append(critic_reviews, cr)
   })
-  mov.CriticReviews = critic_reviews
+  return critic_reviews
 }
