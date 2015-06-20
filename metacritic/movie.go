@@ -9,7 +9,13 @@ import (
         )
 
 type Basic struct {
-  Name, Url, Poster, Summary, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
+  Name, Url, Poster, Summary, Certificate, Runtime, ReleaseDate, Genres string
+  UserRating Rating
+  CriticRating Rating
+}
+
+type Rating struct {
+  Average, Count string
 }
 
 type CriticReview struct {
@@ -47,8 +53,12 @@ func search_movie(url string) (string, error) {
       Runtime: strings.TrimSpace(s.Find("li.runtime .data").Text()),
       ReleaseDate: strings.TrimSpace(s.Find("li.release_date .data").Text()),
       Genres: strings.TrimSpace(s.Find("li.genre .data").Text()),
-      UserRating: strings.TrimSpace(s.Find("li.product_avguserscore .data").Text()),
-      MetacriticRating: strings.TrimSpace(s.Find("span.metascore_w").Text()),
+      UserRating: Rating{
+        Average: strings.TrimSpace(s.Find("li.product_avguserscore .data").Text()),
+      },
+      CriticRating: Rating{
+        Average: strings.TrimSpace(s.Find("span.metascore_w").Text()),
+      },
     }
     movie_results = append(movie_results, m)
   })
@@ -97,6 +107,8 @@ func find_movie(url string) (string, error) {
 
   crs := critic_reviews(url)
   urs := user_reviews(url)
+  user_rating_count := strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary span.count a").First().Text())
+  user_rating_count = user_rating_count[0:len(user_rating_count)-7]
   mov = Movie{
           Basic: Basic{
             Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
@@ -107,8 +119,14 @@ func find_movie(url string) (string, error) {
             Runtime: strings.TrimSpace(runtime),
             ReleaseDate: strings.TrimSpace(doc.Find(".product_data ul.summary_details li.release_data span.data").Text()),
             Genres: genres,
-            UserRating: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
-            MetacriticRating: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
+            UserRating: Rating{
+              Average: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
+              Count: strings.TrimSpace(user_rating_count),
+            },
+            CriticRating: Rating{
+              Average: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
+              Count: strings.TrimSpace(doc.Find(".product_scores .metascore_summary .summary span.count a span").Text()),
+            },
           },
           CriticReviews: crs,
           UserReviews: urs,

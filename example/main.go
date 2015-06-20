@@ -7,8 +7,15 @@ import (
         )
 
 type Movie struct {
-  Name, Url, Poster, Certificate, Runtime, ReleaseDate, Genres, UserRating, MetacriticRating string
+  Name, Url, Poster, Certificate, Runtime, ReleaseDate, Genres string
+  UserRating Rating
+  CriticRating Rating
   CriticReviews []CriticReview
+}
+
+type Rating struct {
+  Average string
+  Count string
 }
 
 type CriticReview struct {
@@ -28,13 +35,12 @@ func main() {
     fmt.Println(err)
   }
 
-  fmt.Println(mov.Genres)
-  // for _, cr := range(mov.CriticReviews) {
-  //   fmt.Println(cr.Score)
-  // }
+  fmt.Printf("Users rated the movie %s %s out of %s. \n", mov.Name, mov.UserRating.Average, mov.UserRating.Count)
+  fmt.Printf("Critics rated the movie %s %s out of %s. \n", mov.Name, mov.CriticRating.Average, mov.CriticRating.Count)
 
-  // fmt.Printf("|Name\t Url \t UserRating \tMetacriticRating\n")
+  // fmt.Printf("|Name \t|UserRating \t|MetacriticRating |\n")
+  // fmt.Printf("|%s \t|%s \t|%s |\n", mov.Name, mov.UserRating.Average, mov.MetacriticRating.Average)
   // for _, el := range mov {
-  //   fmt.Printf("|%-50s \t | %-100s \t |%s \t|%s \t| \n", el.Name, el.Url, el.UserRating, el.MetacriticRating)
+  //   fmt.Printf("|%-50s \t |%s \t|%s \t| \n", el.Name, el.UserRating, el.MetacriticRating)
   // }
 }
