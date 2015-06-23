@@ -8,7 +8,7 @@ import (
         "github.com/PuerkitoBio/goquery"
         )
 
-type Basic struct {
+type MovieBasic struct {
   Name, Url, Poster, Summary, Certificate, Runtime, ReleaseDate, Genres string
   UserRating Rating
   CriticRating Rating
@@ -27,13 +27,13 @@ type UserReview struct {
 }
 
 type Movie struct{
-  Basic
+  MovieBasic
   CriticReviews []CriticReview
   UserReviews []UserReview
 }
 
 func search_movie(url string) (string, error) {
-  var movie_results []Basic
+  var movie_results []MovieBasic
   doc, err := goquery.NewDocument(url)
   if err != nil {
     return "", err
@@ -46,7 +46,7 @@ func search_movie(url string) (string, error) {
     } else {
       url = BASE_URL + url
     }
-    m := Basic{
+    movie := MovieBasic{
       Name: strings.TrimSpace(s.Find("a").First().Text()),
       Url: url,
       Certificate: strings.TrimSpace(s.Find("li.rating .data").Text()),
@@ -60,7 +60,7 @@ func search_movie(url string) (string, error) {
         Average: strings.TrimSpace(s.Find("span.metascore_w").Text()),
       },
     }
-    movie_results = append(movie_results, m)
+    movie_results = append(movie_results, movie)
   })
 
   res, err := json.Marshal(movie_results)
@@ -110,7 +110,7 @@ func find_movie(url string) (string, error) {
   user_rating_count := strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary span.count a").First().Text())
   user_rating_count = user_rating_count[0:len(user_rating_count)-7]
   mov = Movie{
-          Basic: Basic{
+          MovieBasic: MovieBasic{
             Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
             Url: url,
             Poster: poster,

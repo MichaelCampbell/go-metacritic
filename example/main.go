@@ -13,6 +13,11 @@ type Movie struct {
   CriticReviews []CriticReview
 }
 
+type Game struct {
+  Name, Url, Summary, ReleaseDate, Certificate, Publisher, Platform string
+  CriticRating Rating
+}
+
 type Rating struct {
   Average string
   Count string
@@ -23,24 +28,19 @@ type CriticReview struct {
 }
 
 func main() {
-  result, err := metacritic.Find("Movie", "fight-club")
+  result, err := metacritic.Search("Game", "fight")
   if err != nil {
     fmt.Println(err)
   }
 
-  var mov Movie
-  err = json.Unmarshal([]byte(result), &mov)
+  var game_results []Game
+  err = json.Unmarshal([]byte(result), &game_results)
 
   if err != nil {
     fmt.Println(err)
   }
 
-  fmt.Printf("Users rated the movie %s %s out of %s. \n", mov.Name, mov.UserRating.Average, mov.UserRating.Count)
-  fmt.Printf("Critics rated the movie %s %s out of %s. \n", mov.Name, mov.CriticRating.Average, mov.CriticRating.Count)
-
-  // fmt.Printf("|Name \t|UserRating \t|MetacriticRating |\n")
-  // fmt.Printf("|%s \t|%s \t|%s |\n", mov.Name, mov.UserRating.Average, mov.MetacriticRating.Average)
-  // for _, el := range mov {
-  //   fmt.Printf("|%-50s \t |%s \t|%s \t| \n", el.Name, el.UserRating, el.MetacriticRating)
-  // }
+  for _, game := range game_results {
+    fmt.Println(game.Name)
+  }
 }
