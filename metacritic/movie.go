@@ -78,13 +78,6 @@ func find_movie(url string) (string, error) {
     return "", err
   }
 
-  url, exists := doc.Find(".content_head .product_title a").Attr("href")
-  if !exists {
-    url = "Not Available"
-  } else {
-    url = BASE_URL + url
-  }
-
   poster, exists := doc.Find(".product_data_summary .product_image img.product_image").First().Attr("src")
   if !exists {
     poster = "Not Available"
@@ -178,7 +171,7 @@ func user_reviews(url string) []UserReview{
 
     page.Find("ol.user_reviews li.user_review").Each(func(j int, s *goquery.Selection) {
       votes, _ := strconv.Atoi(s.Find(".review_content ul.review_actions .thumb_count span.total_ups").Text())
-      t_votes, _ := strconv.Atoi(s.Find(".review_content ul.review_actions .thumb_count span.total_votes").Text())
+      t_votes, _ := strconv.Atoi(s.Find(".review_content ul.review_actions .thumb_count span.total_thumbs").Text())
       ur := UserReview{
         Username: strings.TrimSpace(s.Find(".review_content .review_critic .name a").Text()),
         ProfileUrl: strings.TrimSpace(s.Find(".review_content .review_critic .name a").AttrOr("href", "Not Available")),

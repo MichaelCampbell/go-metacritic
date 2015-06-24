@@ -8,13 +8,15 @@ import (
         )
 
 type GameBasic struct {
-  Name, Url, Summary, ReleaseDate, Certificate, Publisher, Platform string
+  Name, Url, Poster, Summary, ReleaseDate, Certificate, Genres, Publisher, Platform string
   CriticRating Rating
   UserRating Rating
 }
 
 type Game struct {
   GameBasic
+  CriticReviews []CriticReview
+  UserReviews []UserReview
 }
 
 func search_game(url string) (string, error) {
@@ -47,6 +49,57 @@ func search_game(url string) (string, error) {
   })
 
   res, err := json.Marshal(game_results)
+  if err != nil {
+    return "", nil
+  }
+
+  return string(res), nil
+}
+
+func find_game(url string) (string, error) {
+  var gme Game
+  doc, err := goquery.NewDocument(url)
+  if err != nil {
+    return "", err
+  }
+
+  poster, exists := doc.Find(".product_data_summary .product_image img.product_image").First().Attr("src")
+  if !exists {
+    poster = "Not Available"
+  }
+
+  var genres string
+  doc.Find(".summary_wrap .side_details .summary_details li.product_genre .data").Each(func(i int, s *goquery.Selection) {
+    genres = genres + strings.TrimSpace(s.Text()) + ", "
+    })
+  genres = genres[0:len(genres)-2]
+
+  crs := critic_reviews(url)
+  urs := user_reviews(url)
+  user_rating_count := strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary span.count a").First().Text())
+  user_rating_count = user_rating_count[0:len(user_rating_count)-7]
+  gme = Game{
+          GameBasic: GameBasic{
+            Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
+            Url: url,
+            Poster: poster,
+            Summary: strings.TrimSpace(doc.Find(".product_details ul.summary_details li.product_summary span.data span").Text()),
+            Certificate: strings.TrimSpace(doc.Find(".summary_wrap .side_details .summary_details li.product_rating").First().Text()),
+            ReleaseDate: strings.TrimSpace(doc.Find(".product_data ul.summary_details li.release_data span.data").Text()),
+            Genres: genres,
+            UserRating: Rating{
+              Average: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
+              Count: strings.TrimSpace(user_rating_count),
+            },
+            CriticRating: Rating{
+              Average: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
+              Count: strings.TrimSpace(doc.Find(".product_scores .metascore_summary .summary span.count a span").Text()),
+            },
+          },
+          CriticReviews: crs,
+          UserReviews: urs,
+        }
+  res, err := json.Marshal(gme)
   if err != nil {
     return "", nil
   }

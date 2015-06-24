@@ -16,6 +16,8 @@ type Movie struct {
 type Game struct {
   Name, Url, Summary, ReleaseDate, Certificate, Publisher, Platform string
   CriticRating Rating
+  CriticReviews []CriticReview
+  UserReviews []UserReview
 }
 
 type Rating struct {
@@ -25,6 +27,10 @@ type Rating struct {
 
 type CriticReview struct {
   Score, Source, Author, Summary, Url string
+}
+
+type UserReview struct {
+  Username, ProfileUrl, Score, ReviewDate, Review, Like, Dislike string
 }
 
 func main() {
