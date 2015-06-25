@@ -37,8 +37,7 @@ func Find(kind, query string) (string, error) {
     return "", errors.New("Invalid Type")
   }
 
-  url := BASE_URL + "/movie/" + query
-  result, err := find_movie(url)
+  result, err := find_movie(query)
   if err != nil {
     return "", err
   }

@@ -4,6 +4,7 @@ import (
         "encoding/json"
         "strings"
         "strconv"
+        "errors"
 
         "github.com/PuerkitoBio/goquery"
         )
@@ -71,8 +72,17 @@ func search_movie(url string) (string, error) {
   return string(res), nil
 }
 
-func find_movie(url string) (string, error) {
+func find_movie(query string) (string, error) {
   var mov Movie
+
+  search_url := BASE_URL + "/search/movie/" + query + "/results"
+
+  url, err := first_result(search_url)
+
+  if err != nil {
+    return "", err
+  }
+
   doc, err := goquery.NewDocument(url)
   if err != nil {
     return "", err
@@ -186,4 +196,19 @@ func user_reviews(url string) []UserReview{
   })
 
   return user_reviews
+}
+
+
+func first_result(url string) (string, error) {
+  doc, err := goquery.NewDocument(url)
+  if err != nil {
+    return "", err
+  }
+
+  url, exists := doc.Find(".body .search_results li.result h3.product_title a").First().Attr("href")
+  if !exists {
+    return "", errors.New("Movie Not Found")
+  } else {
+    return BASE_URL + url, nil
+  }
 }
