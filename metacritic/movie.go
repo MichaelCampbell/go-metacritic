@@ -74,11 +74,8 @@ func search_movie(url string) (string, error) {
 
 func find_movie(query string) (string, error) {
   var mov Movie
-
   search_url := BASE_URL + "/search/movie/" + query + "/results"
-
   url, err := first_result(search_url)
-
   if err != nil {
     return "", err
   }

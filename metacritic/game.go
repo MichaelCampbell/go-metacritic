@@ -56,8 +56,14 @@ func search_game(url string) (string, error) {
   return string(res), nil
 }
 
-func find_game(url string) (string, error) {
+func find_game(query string) (string, error) {
   var gme Game
+  search_url := BASE_URL + "/search/game/" + query + "/results"
+  url, err := first_result(search_url)
+  if err != nil {
+    return "", err
+  }
+
   doc, err := goquery.NewDocument(url)
   if err != nil {
     return "", err
@@ -80,7 +86,7 @@ func find_game(url string) (string, error) {
   user_rating_count = user_rating_count[0:len(user_rating_count)-7]
   gme = Game{
           GameBasic: GameBasic{
-            Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").Text()),
+            Name: strings.TrimSpace(doc.Find(".content_head .product_title a span").First().Text()),
             Url: url,
             Poster: poster,
             Summary: strings.TrimSpace(doc.Find(".product_details ul.summary_details li.product_summary span.data span").Text()),

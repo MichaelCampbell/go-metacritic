@@ -34,17 +34,17 @@ type UserReview struct {
 }
 
 func main() {
-  result, err := metacritic.Find("Movie", "fight-club")
+  result, err := metacritic.Find("Game", "fight")
   if err != nil {
     fmt.Println(err)
   }
 
-  var movie Movie
-  err = json.Unmarshal([]byte(result), &movie)
+  var game Game
+  err = json.Unmarshal([]byte(result), &game)
 
   if err != nil {
     fmt.Println(err)
   }
 
-  fmt.Println(movie.Name)
+  fmt.Println(game.Name)
 }

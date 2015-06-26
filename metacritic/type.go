@@ -17,7 +17,6 @@ func Search(kind, query string) (string, error) {
   }
 
   url := BASE_URL + "/search/" + kind + "/" + query + "/results"
-
   switch kind {
   case "movie":
     result, err = search_movie(url)
@@ -32,12 +31,19 @@ func Search(kind, query string) (string, error) {
 }
 
 func Find(kind, query string) (string, error) {
+  var err error
+  var result string
   valid := is_valid_type(&kind, valid_types)
   if !valid {
     return "", errors.New("Invalid Type")
   }
 
-  result, err := find_movie(query)
+  switch kind {
+  case "movie":
+    result, err = find_movie(query)
+  case "game":
+    result, err = find_game(query)
+  }
   if err != nil {
     return "", err
   }
