@@ -90,9 +90,11 @@ func find_game(query string) (string, error) {
             Url: url,
             Poster: poster,
             Summary: strings.TrimSpace(doc.Find(".product_details ul.summary_details li.product_summary span.data span").Text()),
-            Certificate: strings.TrimSpace(doc.Find(".summary_wrap .side_details .summary_details li.product_rating").First().Text()),
+            Certificate: strings.TrimSpace(doc.Find(".summary_wrap .side_details .summary_details li.product_rating span.data").First().Text()),
             ReleaseDate: strings.TrimSpace(doc.Find(".product_data ul.summary_details li.release_data span.data").Text()),
             Genres: genres,
+            Publisher: strings.TrimSpace(doc.Find(".product_data ul.summary_details li.publisher span.data a span").Text()),
+            Platform: strings.TrimSpace(doc.Find(".content_head .product_title span.platform a span").Text()),
             UserRating: Rating{
               Average: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
               Count: strings.TrimSpace(user_rating_count),

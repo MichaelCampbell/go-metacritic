@@ -4,6 +4,8 @@ import (
         "fmt"
         "github.com/avinoth/go-metacritic/metacritic"
         "encoding/json"
+        "github.com/gorilla/mux"
+        "net/http"
         )
 
 type Movie struct {
@@ -34,17 +36,32 @@ type UserReview struct {
 }
 
 func main() {
-  result, err := metacritic.Find("Game", "fight")
+  r := mux.NewRouter()
+  r.HandleFunc("/game/{q}", GameHandler)
+  http.ListenAndServe(":3000", r)
+}
+
+func GameHandler(w http.ResponseWriter, r *http.Request) {
+  args := mux.Vars(r)
+  // action := args["action"]
+  query := args["q"]
+
+  result, err := metacritic.Find("game", query)
+
   if err != nil {
     fmt.Println(err)
   }
 
   var game Game
   err = json.Unmarshal([]byte(result), &game)
-
   if err != nil {
     fmt.Println(err)
   }
 
-  fmt.Println(game.Name)
+  gme, err := json.Marshal(game)
+  if err != nil {
+    fmt.Println(err)
+  }
+  w.Header().Set("Content-Type", "application/json")
+  fmt.Fprint(w, string(gme))
 }
