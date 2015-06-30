@@ -37,28 +37,33 @@ type UserReview struct {
 
 func main() {
   r := mux.NewRouter()
-  r.HandleFunc("/game/{q}", GameHandler)
+  r.HandleFunc("/search/{category}/{q}", SearchHandler)
+  // r.HandleFunc("/find/{category}/{q}", FindHandler)
   http.ListenAndServe(":3000", r)
 }
 
-func GameHandler(w http.ResponseWriter, r *http.Request) {
+func SearchHandler(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
-  // action := args["action"]
+  action := args["category"]
   query := args["q"]
 
-  result, err := metacritic.Find("game", query)
+  result, err := metacritic.Search(action, query)
 
   if err != nil {
     fmt.Println(err)
   }
 
-  var game Game
-  err = json.Unmarshal([]byte(result), &game)
+  // var game Game
+  // var movie Movie
+  // var movie_results []Movie
+  var game_results []Game
+
+  err = json.Unmarshal([]byte(result), &game_results)
   if err != nil {
     fmt.Println(err)
   }
 
-  gme, err := json.Marshal(game)
+  gme, err := json.Marshal(game_results)
   if err != nil {
     fmt.Println(err)
   }

@@ -169,11 +169,13 @@ func user_reviews(url string) []UserReview{
     return user_reviews
   }
 
-  doc.Find("div.pages li.page").Each(func(i int, p *goquery.Selection) {
+  pages := doc.Find("div.pages li.page").Nodes
+
+  for i := 0; i <= len(pages); i++ {
     nxturl := url + "?page=" + strconv.Itoa(i)
     page, err := goquery.NewDocument(nxturl)
     if err != nil {
-      return
+      return user_reviews
     }
 
     page.Find("ol.user_reviews li.user_review").Each(func(j int, s *goquery.Selection) {
@@ -190,7 +192,7 @@ func user_reviews(url string) []UserReview{
       }
       user_reviews = append(user_reviews, ur)
     })
-  })
+  }
 
   return user_reviews
 }
