@@ -10,11 +10,11 @@ import (
 type GameBasic struct {
   Name, Url, Poster, Summary, ReleaseDate, Certificate, Genres, Publisher, Platform string
   CriticRating Rating
-  UserRating Rating
 }
 
 type Game struct {
   GameBasic
+  UserRating Rating
   CriticReviews []CriticReview
   UserReviews []UserReview
 }
@@ -95,14 +95,14 @@ func find_game(query string) (string, error) {
             Genres: genres,
             Publisher: strings.TrimSpace(doc.Find(".product_data ul.summary_details li.publisher span.data a span").Text()),
             Platform: strings.TrimSpace(doc.Find(".content_head .product_title span.platform a span").Text()),
-            UserRating: Rating{
-              Average: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
-              Count: strings.TrimSpace(user_rating_count),
-            },
             CriticRating: Rating{
               Average: strings.TrimSpace(doc.Find(".product_scores .metascore_summary a span").First().Text()),
               Count: strings.TrimSpace(doc.Find(".product_scores .metascore_summary .summary span.count a span").Text()),
             },
+          },
+          UserRating: Rating{
+            Average: strings.TrimSpace(doc.Find(".product_scores .side_details .score_summary a div").First().Text()),
+            Count: strings.TrimSpace(user_rating_count),
           },
           CriticReviews: crs,
           UserReviews: urs,

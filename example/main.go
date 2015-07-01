@@ -2,22 +2,34 @@ package main
 
 import (
         "fmt"
-        "github.com/avinoth/go-metacritic/metacritic"
         "encoding/json"
-        "github.com/gorilla/mux"
+        "strings"
         "net/http"
+
+        "github.com/avinoth/go-metacritic/metacritic"
+        "github.com/gorilla/mux"
         )
 
-type Movie struct {
+type MovieBasic struct {
   Name, Url, Poster, Certificate, Runtime, ReleaseDate, Genres string
   UserRating Rating
   CriticRating Rating
+}
+
+type Movie struct {
+  MovieBasic
   CriticReviews []CriticReview
+  UserReviews []UserReview
+}
+
+type GameBasic struct {
+  Name, Url, Summary, ReleaseDate, Certificate, Publisher, Platform string
+  CriticRating Rating
 }
 
 type Game struct {
-  Name, Url, Summary, ReleaseDate, Certificate, Publisher, Platform string
-  CriticRating Rating
+  GameBasic
+  UserRating Rating
   CriticReviews []CriticReview
   UserReviews []UserReview
 }
@@ -46,27 +58,33 @@ func SearchHandler(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   action := args["category"]
   query := args["q"]
-
+  action = strings.ToLower(action)
   result, err := metacritic.Search(action, query)
 
   if err != nil {
     fmt.Println(err)
   }
 
-  // var game Game
-  // var movie Movie
-  // var movie_results []Movie
-  var game_results []Game
+  var res []byte
+  var movie_results []MovieBasic
+  var game_results []GameBasic
 
-  err = json.Unmarshal([]byte(result), &game_results)
-  if err != nil {
-    fmt.Println(err)
+  if (action == "game") {
+    err = json.Unmarshal([]byte(result), &game_results)
+    if err != nil {
+     fmt.Println(err)
+    }
+
+    res, err = json.Marshal(game_results)
+  } else {
+    err = json.Unmarshal([]byte(result), &movie_results)
+    if err != nil {
+      fmt.Println(err)
+    }
+
+    res, err = json.Marshal(movie_results)
   }
 
-  gme, err := json.Marshal(game_results)
-  if err != nil {
-    fmt.Println(err)
-  }
   w.Header().Set("Content-Type", "application/json")
-  fmt.Fprint(w, string(gme))
+  fmt.Fprint(w, string(res))
 }
