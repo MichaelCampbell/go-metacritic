@@ -49,42 +49,74 @@ type UserReview struct {
 
 func main() {
   r := mux.NewRouter()
-  r.HandleFunc("/search/{category}/{q}", SearchHandler)
-  // r.HandleFunc("/find/{category}/{q}", FindHandler)
+  r.HandleFunc("/api/{mode}/{category}/{q}", ServeHandler)
   http.ListenAndServe(":3000", r)
 }
 
-func SearchHandler(w http.ResponseWriter, r *http.Request) {
+func ServeHandler(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
   action := args["category"]
   query := args["q"]
+  mode := args["mode"]
   action = strings.ToLower(action)
-  result, err := metacritic.Search(action, query)
+
+  var result string
+  var err error
+
+  if (mode == "search") {
+    result, err = metacritic.Search(action, query)
+  } else if (mode == "find") {
+    result, err = metacritic.Find(action, query)
+  } else {
+    w.WriteHeader(http.StatusNotFound)
+    fmt.Fprintln(w, "Invalid Operation. Avaialble search, movie")
+  }
 
   if err != nil {
-    fmt.Println(err)
+    fmt.Fprintln(w, err)
   }
 
   var res []byte
   var movie_results []MovieBasic
   var game_results []GameBasic
+  var movie Movie
+  var game Game
 
-  if (action == "game") {
-    err = json.Unmarshal([]byte(result), &game_results)
-    if err != nil {
-     fmt.Println(err)
+  if (mode == "search") {
+    if (action == "game") {
+      err = json.Unmarshal([]byte(result), &game_results)
+      if err != nil {
+       fmt.Println(err)
+      }
+
+      res, err = json.Marshal(game_results)
+    } else {
+      err = json.Unmarshal([]byte(result), &movie_results)
+      if err != nil {
+        fmt.Println(err)
+      }
+
+      res, err = json.Marshal(movie_results)
     }
-
-    res, err = json.Marshal(game_results)
   } else {
-    err = json.Unmarshal([]byte(result), &movie_results)
-    if err != nil {
-      fmt.Println(err)
-    }
+    if (action == "game") {
+      err = json.Unmarshal([]byte(result), &game)
+      if err != nil {
+       fmt.Println(err)
+      }
 
-    res, err = json.Marshal(movie_results)
+      res, err = json.Marshal(game)
+    } else {
+      err = json.Unmarshal([]byte(result), &movie)
+      if err != nil {
+        fmt.Println(err)
+      }
+
+      res, err = json.Marshal(movie)
+    }
   }
 
   w.Header().Set("Content-Type", "application/json")
   fmt.Fprint(w, string(res))
 }
+
