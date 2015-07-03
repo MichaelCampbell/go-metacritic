@@ -34,6 +34,11 @@ type Game struct {
   UserReviews []UserReview
 }
 
+type AlbumBasic struct {
+  Name, Url, Summary, ReleaseDate, Genres string
+  CriticRating Rating
+}
+
 type Rating struct {
   Average string
   Count string
@@ -55,21 +60,20 @@ func main() {
 
 func ServeHandler(w http.ResponseWriter, r *http.Request) {
   args := mux.Vars(r)
-  action := args["category"]
+  category := args["category"]
   query := args["q"]
   mode := args["mode"]
-  action = strings.ToLower(action)
+  category = strings.ToLower(category)
 
   var result string
   var err error
 
   if (mode == "search") {
-    result, err = metacritic.Search(action, query)
+    result, err = metacritic.Search(category, query)
   } else if (mode == "find") {
-    result, err = metacritic.Find(action, query)
+    result, err = metacritic.Find(category, query)
   } else {
-    w.WriteHeader(http.StatusNotFound)
-    fmt.Fprintln(w, "Invalid Operation. Avaialble search, movie")
+    errorHandler(w, r, http.StatusNotFound, "Invalid Mode. Available modes - Search, Find")
   }
 
   if err != nil {
@@ -79,44 +83,68 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
   var res []byte
   var movie_results []MovieBasic
   var game_results []GameBasic
+  var album_results []AlbumBasic
   var movie Movie
   var game Game
 
   if (mode == "search") {
-    if (action == "game") {
+    switch category {
+    case "game":
       err = json.Unmarshal([]byte(result), &game_results)
       if err != nil {
-       fmt.Println(err)
+        fmt.Println(err)
+        errorHandler(w, r, http.StatusInternalServerError , "")
       }
-
       res, err = json.Marshal(game_results)
-    } else {
+    case "movie":
       err = json.Unmarshal([]byte(result), &movie_results)
       if err != nil {
         fmt.Println(err)
+        errorHandler(w, r, http.StatusInternalServerError , "")
       }
-
       res, err = json.Marshal(movie_results)
-    }
-  } else {
-    if (action == "game") {
-      err = json.Unmarshal([]byte(result), &game)
-      if err != nil {
-       fmt.Println(err)
-      }
-
-      res, err = json.Marshal(game)
-    } else {
-      err = json.Unmarshal([]byte(result), &movie)
+    case "album":
+      err = json.Unmarshal([]byte(result), &album_results)
       if err != nil {
         fmt.Println(err)
+        errorHandler(w, r, http.StatusInternalServerError , "")
       }
-
-      res, err = json.Marshal(movie)
+      res, err = json.Marshal(album_results)
+    default:
+      errorHandler(w, r, http.StatusNotFound, "Invalid Category. Available Game, Movie, Album")
     }
+  } else if (mode == "find") {
+    switch category {
+      case "game":
+        err = json.Unmarshal([]byte(result), &game)
+        if err != nil {
+          fmt.Println(err)
+          errorHandler(w, r, http.StatusInternalServerError , "")
+        }
+        res, err = json.Marshal(game)
+      case "movie":
+        err = json.Unmarshal([]byte(result), &movie)
+        if err != nil {
+          fmt.Println(err)
+          errorHandler(w, r, http.StatusInternalServerError , "")
+        }
+        res, err = json.Marshal(movie)
+    }
+  } else {
+    errorHandler(w, r, http.StatusNotFound, "Invalid Mode. Available modes - Search, Find")
+  }
+
+  if err != nil {
+    fmt.Println(err)
+    errorHandler(w, r, http.StatusInternalServerError , "")
   }
 
   w.Header().Set("Content-Type", "application/json")
   fmt.Fprint(w, string(res))
+}
+
+func errorHandler(w http.ResponseWriter, r *http.Request, status int, err_msg string) {
+    w.WriteHeader(status)
+    fmt.Print(w, err_msg)
 }
 
