@@ -35,8 +35,15 @@ type Game struct {
 }
 
 type AlbumBasic struct {
-  Name, Url, Summary, ReleaseDate, Genres string
+  Name, Url, Poster, Summary, ReleaseDate, Genres, RecordLabel string
   CriticRating Rating
+}
+
+type Album struct {
+  AlbumBasic
+  UserRating Rating
+  CriticReviews []CriticReview
+  UserReviews []UserReview
 }
 
 type Rating struct {
@@ -86,6 +93,7 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
   var album_results []AlbumBasic
   var movie Movie
   var game Game
+  var album Album
 
   if (mode == "search") {
     switch category {
@@ -129,6 +137,13 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
           errorHandler(w, r, http.StatusInternalServerError , "")
         }
         res, err = json.Marshal(movie)
+      case "album":
+        err = json.Unmarshal([]byte(result), &album)
+        if err != nil {
+          fmt.Println(err)
+          errorHandler(w, r, http.StatusInternalServerError , "")
+        }
+        res, err = json.Marshal(album)
     }
   } else {
     errorHandler(w, r, http.StatusNotFound, "Invalid Mode. Available modes - Search, Find")

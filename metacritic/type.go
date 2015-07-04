@@ -45,6 +45,8 @@ func Find(kind, query string) (string, error) {
     result, err = find_movie(query)
   case "game":
     result, err = find_game(query)
+  case "album":
+    result, err = find_album(query)
   }
   if err != nil {
     return "", err
