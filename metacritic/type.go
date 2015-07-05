@@ -6,7 +6,7 @@ import (
         )
 
 const BASE_URL = "http://www.metacritic.com"
-var valid_types = []string{"movie", "game", "album"}
+var valid_types = []string{"movie", "game", "album", "person"}
 
 func Search(kind, query string) (string, error) {
   var err error
@@ -24,6 +24,8 @@ func Search(kind, query string) (string, error) {
     result, err = search_game(url)
   case "album":
     result, err = search_album(url)
+  case "person":
+    result, err = search_person(url)
   }
   if err != nil {
     return "", err

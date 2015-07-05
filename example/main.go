@@ -46,6 +46,10 @@ type Album struct {
   UserReviews []UserReview
 }
 
+type PersonBasic struct {
+  Name, Url, AverageMovieScore, AverageTVScore, DOB, Categories string
+}
+
 type Rating struct {
   Average string
   Count string
@@ -91,6 +95,7 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
   var movie_results []MovieBasic
   var game_results []GameBasic
   var album_results []AlbumBasic
+  var person_results []PersonBasic
   var movie Movie
   var game Game
   var album Album
@@ -118,8 +123,15 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
         errorHandler(w, r, http.StatusInternalServerError , "")
       }
       res, err = json.Marshal(album_results)
+    case "person":
+      err = json.Unmarshal([]byte(result), &person_results)
+      if err != nil {
+        fmt.Println(err)
+        errorHandler(w, r, http.StatusInternalServerError , "")
+      }
+      res, err = json.Marshal(person_results)
     default:
-      errorHandler(w, r, http.StatusNotFound, "Invalid Category. Available Game, Movie, Album")
+      errorHandler(w, r, http.StatusNotFound, "Invalid Category. Available Game, Movie, Album, Person")
     }
   } else if (mode == "find") {
     switch category {
