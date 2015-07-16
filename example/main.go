@@ -82,6 +82,11 @@ type UserReview struct {
   Username, ProfileUrl, Score, ReviewDate, Review, Like, Dislike string
 }
 
+type TvBasic struct {
+  Name, Url, Summary, ReleaseDate, Genres string
+  CriticRating Rating
+}
+
 func main() {
   r := mux.NewRouter()
   r.HandleFunc("/api/{mode}/{category}/{q}", ServeHandler)
@@ -115,6 +120,7 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
   var game_results []GameBasic
   var album_results []AlbumBasic
   var person_results []PersonBasic
+  var tv_results []TvBasic
   var movie Movie
   var game Game
   var album Album
@@ -150,8 +156,15 @@ func ServeHandler(w http.ResponseWriter, r *http.Request) {
         errorHandler(w, r, http.StatusInternalServerError , "")
       }
       res, err = json.Marshal(person_results)
+    case "tv":
+      err = json.Unmarshal([]byte(result), &tv_results)
+      if err != nil {
+        fmt.Println(err)
+        errorHandler(w, r, http.StatusInternalServerError , "")
+      }
+      res, err = json.Marshal(tv_results)
     default:
-      errorHandler(w, r, http.StatusNotFound, "Invalid Category. Available Game, Movie, Album, Person")
+      errorHandler(w, r, http.StatusNotFound, "Invalid Category. Available Game, Movie, Album, Person, Tv")
     }
   } else if (mode == "find") {
     switch category {
